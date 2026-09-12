@@ -128,13 +128,13 @@ export default function Page() {
 ## screenshots
 
 <img width="1533" height="790" alt="image" src="https://github.com/user-attachments/assets/71cecc38-aea7-45e7-9d0c-740445d79573" />
-
+The Death Clock, Our watch never displays the actual time instead it zooms out into our lives shows the number of days left before we DIE!
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/53c0f559-a6f7-49ae-a668-571de6486c02" />
-
+When the user stops running or jogging the watch buzzes and sends an alert in a cynical tone for eg: "Movement ceased are we dying or just giving up?"
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b5298c90-f1b8-4612-9daa-b8a388bb422e" />
-
+In order to counter the frequent look ups made by the user the watch sends random devastating roasting counters,especially when the user during jogging. 
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/e364b2f4-41ad-4392-a921-76eab6d96460" />
-
+When only the goal is being met the watch displays the number of steps taken.
 
 
 
