@@ -105,6 +105,7 @@ Simply double click `index.html` or open it in any modern web browser:
 # In Windows PowerShell / Terminal:
 start index.html
 ```
+Live link: https://useless-project-devd.vercel.app/ 
 
 ### Option 2: Local HTTP Server
 Run any of the bundled lightweight server scripts:
@@ -124,6 +125,18 @@ export default function Page() {
 ```
 
 ---
+## screenshots
+
+<img width="1533" height="790" alt="image" src="https://github.com/user-attachments/assets/71cecc38-aea7-45e7-9d0c-740445d79573" />
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/53c0f559-a6f7-49ae-a668-571de6486c02" />
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b5298c90-f1b8-4612-9daa-b8a388bb422e" />
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/e364b2f4-41ad-4392-a921-76eab6d96460" />
+
+
+
 
 ## 📂 Project Structure
 
