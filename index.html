@@ -1,1 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Diogenes Watch — Virtual Smartwatch UI</title>
+  <style>
+    /* ==========================================================================
+       THE DIOGENES WATCH
+       Pure Brutalist Aesthetic: OLED Black, Stark White, Warning Red Accent
+       Clean Watch Face (No Artificial Tabs on Screen), Safe Inscribed Circle Geometry
+       ========================================================================== */
 
+    :root {
+      --oled-black: #000000;
+      --chassis-dark: #16171b;
+      --chassis-rim: #242630;
+      --stark-white: #ffffff;
+      --dim-gray: #71717a;
+      --border-gray: #27272a;
+      --warning-red: #ff1e27;
+      --emerald-green: #10b981;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #070709;
+      color: #e4e4e7;
+      font-family: ui-monospace, "Cascadia Code", "Space Mono", Menlo, Monaco, Consolas, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background grid */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: 
+        radial-gradient(circle at center, rgba(30, 30, 40, 0.5) 0%, rgba(7, 7, 9, 0.98) 75%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 28px 28px, 28px 28px;
+      z-index: -1;
+    }
+
+    /* Header Nav */
+    header {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 0 4px;
+    }
+
+    .brand-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--stark-white);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--warning-red);
+      animation: pulse 1.6s infinite ease-in-out;
+    }
+
+    .audio-btn {
+      background: #121318;
+      border: 1px solid var(--border-gray);
+      color: #a1a1aa;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 9.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .audio-btn:hover {
+      border-color: var(--warning-red);
+      color: #ffffff;
+    }
+
+    /* ==========================================================================
+       SMARTWATCH HARDWARE (Compact 290px Bezel, Pure Watch Aesthetics)
+       ========================================================================== */
+    .smartwatch-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 6px 0 10px 0;
+    }
+
+    /* Silicone Straps */
+    .strap-top, .strap-bottom {
+      position: absolute;
+      width: 110px;
+      height: 46px;
+      background: linear-gradient(180deg, #101116 0%, #1a1b22 50%, #121317 100%);
+      border: 1px solid #20222a;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .strap-top {
+      top: -34px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .strap-bottom {
+      bottom: -34px;
+      border-radius: 0 0 10px 10px;
+    }
+
+    /* 290px Circular Titanium Bezel */
+    .watch-casing {
+      position: relative;
+      width: 290px;
+      height: 290px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #252630 0%, #121317 50%, #1e1f28 100%);
+      padding: 11px;
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 0 0 4px #0c0d11,
+        0 0 0 8px #191a22,
+        0 0 0 10px #090a0d,
+        0 20px 50px rgba(0, 0, 0, 0.95);
+      transition: transform 0.15s ease;
+      z-index: 2;
+    }
+
+    /* Tactile Crown Button (2 o'clock) */
+    .crown-btn {
+      position: absolute;
+      right: -14px;
+      top: 33%;
+      width: 14px;
+      height: 44px;
+      background: linear-gradient(90deg, #52525b, #71717a, #3f3f46);
+      border-radius: 0 5px 5px 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+      z-index: 10;
+      transition: transform 0.1s;
+    }
+
+    .crown-btn:active {
+      transform: scaleX(0.85);
+    }
+
+    /* Secondary Pusher (4 o'clock) */
+    .pusher-btn {
+      position: absolute;
+      right: -11px;
+      top: 61%;
+      width: 11px;
+      height: 32px;
+      background: linear-gradient(90deg, #374151, #4b5563);
+      border-radius: 0 4px 4px 0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .pusher-btn:active {
+      transform: scaleX(0.85);
+    }
+
+    /* ==========================================================================
+       PITCH-BLACK OLED SCREEN (PURE REALISTIC SMARTWATCH DISPLAY)
+       ========================================================================== */
+    .oled-screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-color: var(--oled-black);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 14px 16px 14px;
+      border: 1px solid #15161f;
+      box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.95);
+    }
+
+    /* Glass Glare Overlay */
+    .glass-glare {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 60%);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Top Arc Clock Bar */
+    .screen-header {
+      position: relative;
+      z-index: 6;
+      width: 100%;
+      max-width: 200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+      color: #6b7280;
+      letter-spacing: 0.05em;
+    }
+
+    .clock-display {
+      color: #d4d4d8;
+      font-weight: 700;
+    }
+
+    .memento-tag {
+      color: var(--warning-red);
+      font-weight: 800;
+      font-size: 8px;
+      letter-spacing: 0.1em;
+    }
+
+    /* ==========================================================================
+       CORE FEATURE: THE EXISTENTIAL DEATH CLOCK
+       ========================================================================== */
+    .death-center-box {
+      position: relative;
+      z-index: 6;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: auto 0;
+      width: 100%;
+      max-width: 210px;
+    }
+
+    .death-caption {
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #71717a;
+      margin-bottom: 2px;
+    }
+
+    /* Massive Brutalist Digits */
+    .death-int {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--stark-white);
+      line-height: 1;
+      text-shadow: 0 0 14px rgba(255, 255, 255, 0.35), 0 0 28px rgba(255, 30, 39, 0.25);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* High-Precision 8-Decimal Anxiety Ticker */
+    .death-dec {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--warning-red);
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .days-left-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: #d4d4d8;
+      margin-top: 3px;
+    }
+
+    .penalty-pill {
+      margin-top: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 7.5px;
+      font-weight: 700;
+      background: rgba(138, 5, 11, 0.3);
+      border: 1px solid rgba(255, 30, 39, 0.4);
+      color: #ff6b6b;
+      transition: all 0.2s;
+    }
+
+    .penalty-pill.halted {
+      background: rgba(6, 78, 59, 0.3);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    /* ==========================================================================
+       METRIC GATE (ANTI-GLANCE PROTECTION)
+       ========================================================================== */
+    .metric-gate-card {
+      position: relative;
+      z-index: 6;
+      width: 100%;
+      max-width: 210px;
+      border-radius: 6px;
+      border: 1px solid #1f2028;
+      background: rgba(11, 12, 16, 0.95);
+      padding: 6px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .metric-gate-card:hover {
+      border-color: var(--warning-red);
+      background: #161722;
+    }
+
+    .locked-label {
+      color: var(--warning-red);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .locked-prompt {
+      font-size: 7.5px;
+      color: #71717a;
+      margin-top: 1px;
+    }
+
+    .unlocked-label {
+      color: var(--emerald-green);
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ==========================================================================
+       SARCASTIC NOTIFICATION SLIDE-UP CARD (Safe Inscribed Circle Geometry)
+       ========================================================================== */
+    .notif-card {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      background: #0d0d12;
+      border: 1px solid #b91c1c;
+      border-radius: 10px;
+      padding: 10px 11px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.98);
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transform: translateY(140%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .notif-card.visible {
+      transform: translateY(0);
+    }
+
+    .notif-badge {
+      color: var(--warning-red);
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .notif-copy {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--stark-white);
+      line-height: 1.35;
+      margin: 3px 0 7px 0;
+    }
+
+    .notif-btn {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: #dc2626;
+      border: none;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .notif-btn:hover {
+      background: #ef4444;
+    }
+
+    /* ==========================================================================
+       SARCASTIC INTERCEPTOR ROAST MODAL (Contained Inside Circular Screen)
+       ========================================================================== */
+    .interceptor-modal {
+      position: absolute;
+      inset: 8px;
+      border-radius: 50%;
+      background: rgba(4, 4, 6, 0.98);
+      border: 1px solid var(--warning-red);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .interceptor-modal.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .roast-badge {
+      font-size: 8px;
+      font-weight: 800;
+      color: var(--warning-red);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .roast-quote {
+      font-size: 10px;
+      font-weight: 700;
+      color: #f3f4f6;
+      line-height: 1.35;
+      margin: 4px 0 8px 0;
+      max-width: 190px;
+    }
+
+    .roast-btn-row {
+      display: flex;
+      gap: 4px;
+    }
+
+    .roast-btn {
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #141620;
+      border: 1px solid #374151;
+      color: #d1d5db;
+      font-family: inherit;
+      font-size: 8px;
+      font-weight: 800;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .roast-btn:hover {
+      background: #20222f;
+      color: #ffffff;
+    }
+
+    /* ==========================================================================
+       EXTERNAL HIGH-VISIBILITY MODE CONTROLS DOCK (OUTSIDE THE WATCH)
+       ========================================================================== */
+    .external-controls-dock {
+      width: 100%;
+      max-width: 380px;
+      background: #111217;
+      border: 1px solid #232530;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+      margin-top: 4px;
+    }
+
+    .controls-label {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #8e8f99;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mode-buttons-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .ext-mode-btn {
+      background: #181920;
+      border: 1px solid #2a2c38;
+      border-radius: 5px;
+      padding: 7px 2px;
+      color: #9ca3af;
+      font-family: inherit;
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+
+    .ext-mode-btn:hover {
+      color: #ffffff;
+      background: #222430;
+      border-color: #4a4d60;
+    }
+
+    .ext-mode-btn.active {
+      background: #272a38;
+      color: #ffffff;
+      border-color: var(--warning-red);
+      box-shadow: 0 0 8px rgba(255, 30, 39, 0.35);
+    }
+
+    /* Shake Animation */
+    @keyframes vibrate {
+      0%, 100% { transform: translate(0, 0); }
+      15% { transform: translate(-5px, -3px) rotate(-1deg); }
+      30% { transform: translate(5px, 2px) rotate(1deg); }
+      45% { transform: translate(-4px, 3px) rotate(-1deg); }
+      60% { transform: translate(4px, -2px) rotate(0.8deg); }
+      75% { transform: translate(-2px, 1px); }
+    }
+
+    .shake-active {
+      animation: vibrate 0.38s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+    }
+
+    /* Active Mode Feedback Footer */
+    .status-feedback {
+      font-size: 9px;
+      color: #71717a;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    .status-feedback strong {
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background -->
+  <div class="bg-grid"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-title">
+      <span class="pulse-dot"></span>
+      <span>The Diogenes Watch</span>
+    </div>
+
+    <!-- Haptic Sound Switch -->
+    <button id="audio-toggle-btn" class="audio-btn" title="Toggle Sound">
+      <span id="audio-icon">🔊</span>
+      <span id="audio-label">Sound On</span>
+    </button>
+  </header>
+
+  <!-- ==========================================================================
+       VIRTUAL SMARTWATCH HARDWARE (290px Compact Circular Bezel)
+       Pure Watch Face (No Artificial Tabs on Screen)
+       ========================================================================== -->
+  <main class="smartwatch-wrapper">
+    
+    <!-- Top Silicone Strap -->
+    <div class="strap-top"></div>
+
+    <!-- Bottom Silicone Strap -->
+    <div class="strap-bottom"></div>
+
+    <!-- Watch Casing Bezel -->
+    <div id="watch-casing" class="watch-casing">
+      
+      <!-- Clickable Crown Button (2 o'clock) -->
+      <div id="crown-btn" class="crown-btn" title="Click crown to test vibration alert"></div>
+
+      <!-- Secondary Flush Pusher (4 o'clock) -->
+      <div id="pusher-btn" class="pusher-btn" title="Click pusher to test cynical roast"></div>
+
+      <!-- Pitch-Black OLED Screen -->
+      <div class="oled-screen">
+        <div class="glass-glare"></div>
+
+        <!-- 1. Top Arc Clock Bar -->
+        <div class="screen-header">
+          <span id="watch-clock" class="clock-display">22:56:33</span>
+          <span class="memento-tag">MEMENTO MORI</span>
+        </div>
+
+        <!-- 2. CENTER EXISTENTIAL DEATH CLOCK -->
+        <div class="death-center-box">
+          <div class="death-caption">ESTIMATED EXPIRATION</div>
+
+          <!-- Massive Glowing Digits + 8-Decimal Real-Time Precision -->
+          <div class="death-int" id="days-int">19,709</div>
+          <div class="death-dec" id="days-dec">.84920184</div>
+
+          <div class="days-left-label">DAYS LEFT</div>
+
+          <div id="penalty-pill" class="penalty-pill">
+            <span class="pulse-dot" style="width:3px; height:3px;"></span>
+            <span id="penalty-txt">PENALTY ACTIVE: SEDENTARY GLANCE</span>
+          </div>
+        </div>
+
+        <!-- 3. METRIC GATE (Anti-Glance Protection) -->
+        <div id="metric-gate" class="metric-gate-card" title="Click to test metric glance">
+          <!-- Locked State (Default) -->
+          <div id="locked-view">
+            <div class="locked-label">🔒 STATISTICS LOCKED</div>
+            <div class="locked-prompt">KEEP MOVING • NO DOPAMINE HERE</div>
+          </div>
+
+          <!-- Unlocked State (Mode 4: Goal Met) -->
+          <div id="unlocked-view" style="display: none;">
+            <div class="unlocked-label">✓ 10,482 STEPS COMPLETED</div>
+            <div class="locked-prompt" style="color:#a1a1aa;">BARE MINIMUM MET. NO PRAISE.</div>
+          </div>
+        </div>
+
+        <!-- 4. SARCASTIC NOTIFICATION CARD (Slides up inside the watch) -->
+        <div id="notif-card" class="notif-card">
+          <div class="notif-badge">INERTIA DETECTED</div>
+          <p id="notif-text" class="notif-copy">
+            "Movement ceased. Are we dying or just giving up?"
+          </p>
+          <button id="resume-sprinting-btn" class="notif-btn">
+            Resume Sprinting &rarr;
+          </button>
+        </div>
+
+        <!-- 5. CYNIC ROAST MODAL (Contained inside the circular watch) -->
+        <div id="interceptor-modal" class="interceptor-modal">
+          <div class="roast-badge">INTERCEPTION: UNMET RIGHT</div>
+          <p id="interceptor-quote" class="roast-quote">
+            "You haven't earned the right to look. Go run."
+          </p>
+          <div class="roast-btn-row">
+            <button id="next-quote-btn" class="roast-btn">Next</button>
+            <button id="close-interceptor-btn" class="roast-btn" style="border-color:var(--warning-red); color:#fff;">[ I Will Run ]</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+       EXTERNAL HIGH-VISIBILITY MODE CONTROLS DOCK (OUTSIDE THE WATCH)
+       ========================================================================== -->
+  <aside class="external-controls-dock">
+    <div class="controls-label">
+      <span>Watch Mode Switcher:</span>
+      <span id="stillness-timer-txt" style="color:#fbbf24; font-weight:700;">8s to alert</span>
+    </div>
+    <div class="mode-buttons-row">
+      <button class="ext-mode-btn active" data-mode="death">1. Clock</button>
+      <button class="ext-mode-btn" data-mode="notif">2. Alert</button>
+      <button class="ext-mode-btn" data-mode="roast">3. Roast</button>
+      <button class="ext-mode-btn" data-mode="goal">4. Goal Met</button>
+    </div>
+  </aside>
+
+  <!-- Status Line -->
+  <p id="active-status-desc" class="status-feedback">
+    Active Mode: <strong>1. Death Clock</strong> — 8-decimal existential countdown.
+  </p>
+
+  <!-- ==========================================================================
+       ROBUST JAVASCRIPT CONTROLLER
+       ========================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      // 75-year lifespan for a 21-year-old baseline = 19,710 days
+      let remainingDays = 19709.84920184;
+
+      const state = {
+        currentMode: 'death', // 'death' | 'notif' | 'roast' | 'goal'
+        sound: true,
+        stillnessSeconds: 8,
+        roastIdx: 0
+      };
+
+      const cynicalRoasts = [
+        "You haven't earned the right to look. Go run.",
+        "Checking your wrist burns 0.002 calories. Stop procrastinating.",
+        "Diogenes lived in a barrel and walked barefoot. You need a gold star to walk?",
+        "Dopamine seeker detected. Close your watch and move your legs.",
+        "Alexander conquered Persia at 25. You are tapping a digital screen asking if you walked enough.",
+        "Looking for validation? You won't find it here. The dirt doesn't applaud.",
+        "Still zero discipline detected. Return to your suffering."
+      ];
+
+      // Procedural Web Audio Synthesizer
+      let audioCtx = null;
+      function getAudio() {
+        if (!state.sound) return null;
+        try {
+          if (!audioCtx) {
+            const AudioClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioClass) audioCtx = new AudioClass();
+          }
+          if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+          return audioCtx;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function playVibrationSound() {
+        const ctx = getAudio();
+        if (!ctx) return;
+        try {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(65, ctx.currentTime);
+
+          gain.gain.setValueAtTime(0.22, ctx.currentTime);
+          gain.gain.setValueAtTime(0.01, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime + 0.15);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+        } catch (e) {}
+      }
+
+      function playBuzzer() {
+        const ctx = getAudio();
+        if (!ctx) return;
+        try {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(140, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(75, ctx.currentTime + 0.22);
+
+          gain.gain.setValueAtTime(0.16, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.22);
+        } catch (e) {}
+      }
+
+      function playClick() {
+        const ctx = getAudio();
+        if (!ctx) return;
+        try {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, ctx.currentTime);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.04);
+        } catch (e) {}
+      }
+
+      function playGoalTone() {
+        const ctx = getAudio();
+        if (!ctx) return;
+        try {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.2);
+        } catch (e) {}
+      }
+
+      // DOM Elements
+      const casing = document.getElementById('watch-casing');
+      const watchClock = document.getElementById('watch-clock');
+      const daysInt = document.getElementById('days-int');
+      const daysDec = document.getElementById('days-dec');
+      const penaltyPill = document.getElementById('penalty-pill');
+      const penaltyTxt = document.getElementById('penalty-txt');
+
+      const metricGate = document.getElementById('metric-gate');
+      const lockedView = document.getElementById('locked-view');
+      const unlockedView = document.getElementById('unlocked-view');
+
+      const notifCard = document.getElementById('notif-card');
+      const resumeBtn = document.getElementById('resume-sprinting-btn');
+
+      const interceptorModal = document.getElementById('interceptor-modal');
+      const interceptorQuote = document.getElementById('interceptor-quote');
+      const nextQuoteBtn = document.getElementById('next-quote-btn');
+      const closeInterceptorBtn = document.getElementById('close-interceptor-btn');
+
+      const crownBtn = document.getElementById('crown-btn');
+      const pusherBtn = document.getElementById('pusher-btn');
+
+      const stillnessTimerTxt = document.getElementById('stillness-timer-txt');
+      const activeStatusDesc = document.getElementById('active-status-desc');
+
+      const audioBtn = document.getElementById('audio-toggle-btn');
+      const audioIcon = document.getElementById('audio-icon');
+      const audioLabel = document.getElementById('audio-label');
+
+      const extModeButtons = document.querySelectorAll('.ext-mode-btn');
+
+      // High-precision 8-decimal countdown ticker (20ms)
+      const TICK = 0.00000023148148;
+      setInterval(function () {
+        if (state.currentMode !== 'goal') {
+          remainingDays -= TICK;
+        }
+        const str = remainingDays.toFixed(8);
+        const parts = str.split('.');
+        daysInt.textContent = parseInt(parts[0], 10).toLocaleString();
+        daysDec.textContent = '.' + parts[1];
+
+        const d = new Date();
+        const h = String(d.getHours()).padStart(2, '0');
+        const m = String(d.getMinutes()).padStart(2, '0');
+        const s = String(d.getSeconds()).padStart(2, '0');
+        watchClock.textContent = h + ':' + m + ':' + s;
+      }, 20);
+
+      // Inactivity Stillness Sensor Simulation
+      setInterval(function () {
+        if (state.currentMode === 'death') {
+          state.stillnessSeconds--;
+          if (state.stillnessSeconds <= 0) {
+            triggerNotificationAlert();
+            state.stillnessSeconds = 14;
+          }
+          stillnessTimerTxt.textContent = state.stillnessSeconds + 's to alert';
+        } else if (state.currentMode === 'goal') {
+          stillnessTimerTxt.textContent = 'Sensor disarmed';
+        } else {
+          stillnessTimerTxt.textContent = 'Active';
+        }
+      }, 1000);
+
+      function resetStillness() {
+        if (state.currentMode === 'death') {
+          state.stillnessSeconds = 8;
+          stillnessTimerTxt.textContent = state.stillnessSeconds + 's to alert';
+        }
+      }
+
+      window.addEventListener('mousemove', resetStillness, { passive: true });
+      window.addEventListener('touchstart', resetStillness, { passive: true });
+
+      // Inactivity Alert Trigger (Violent Shake + Slide-Up Card)
+      function triggerNotificationAlert() {
+        state.currentMode = 'notif';
+        syncModeUI('notif');
+
+        playVibrationSound();
+
+        casing.classList.remove('shake-active');
+        void casing.offsetWidth; // Force reflow
+        casing.classList.add('shake-active');
+
+        setTimeout(function () {
+          notifCard.classList.add('visible');
+        }, 300);
+
+        activeStatusDesc.innerHTML = 'Active Mode: <strong>2. Inactivity Alert</strong> — Watch vibrates & alert slides up.';
+      }
+
+      function dismissNotification() {
+        playClick();
+        notifCard.classList.remove('visible');
+        setTimeout(function () {
+          switchMode('death');
+          resetStillness();
+        }, 250);
+      }
+
+      // Cynic Roast Interceptor
+      function triggerRoast() {
+        if (state.currentMode === 'goal') return;
+
+        state.currentMode = 'roast';
+        syncModeUI('roast');
+
+        playBuzzer();
+        interceptorQuote.textContent = `"${cynicalRoasts[state.roastIdx % cynicalRoasts.length]}"`;
+        interceptorModal.classList.add('visible');
+
+        activeStatusDesc.innerHTML = 'Active Mode: <strong>3. Sarcastic Roast</strong> — Intercepts unearned glances.';
+      }
+
+      function closeRoast() {
+        playClick();
+        interceptorModal.classList.remove('visible');
+        switchMode('death');
+        resetStillness();
+      }
+
+      // Mode Switcher Engine
+      function switchMode(mode) {
+        state.currentMode = mode;
+        syncModeUI(mode);
+
+        notifCard.classList.remove('visible');
+        interceptorModal.classList.remove('visible');
+
+        if (mode === 'death') {
+          playClick();
+          lockedView.style.display = 'block';
+          unlockedView.style.display = 'none';
+          penaltyPill.classList.remove('halted');
+          penaltyTxt.textContent = 'PENALTY ACTIVE: SEDENTARY GLANCE';
+          activeStatusDesc.innerHTML = 'Active Mode: <strong>1. Death Clock</strong> — 8-decimal existential countdown.';
+        } else if (mode === 'notif') {
+          triggerNotificationAlert();
+        } else if (mode === 'roast') {
+          triggerRoast();
+        } else if (mode === 'goal') {
+          playGoalTone();
+          lockedView.style.display = 'none';
+          unlockedView.style.display = 'block';
+          penaltyPill.classList.add('halted');
+          penaltyTxt.textContent = 'PENALTY HALTED: BARE MINIMUM MET';
+          activeStatusDesc.innerHTML = 'Active Mode: <strong>4. Goal Met</strong> — 10,482 steps unlocked, penalty halted.';
+        }
+      }
+
+      function syncModeUI(activeMode) {
+        extModeButtons.forEach(function (btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-mode') === activeMode);
+        });
+      }
+
+      // Event Bindings for External Dock Buttons
+      extModeButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          switchMode(this.getAttribute('data-mode'));
+        });
+      });
+
+      resumeBtn.addEventListener('click', dismissNotification);
+
+      nextQuoteBtn.addEventListener('click', function () {
+        playBuzzer();
+        state.roastIdx++;
+        interceptorQuote.textContent = `"${cynicalRoasts[state.roastIdx % cynicalRoasts.length]}"`;
+      });
+
+      closeInterceptorBtn.addEventListener('click', closeRoast);
+
+      crownBtn.addEventListener('click', triggerNotificationAlert);
+      pusherBtn.addEventListener('click', triggerRoast);
+
+      metricGate.addEventListener('click', function () {
+        if (state.currentMode === 'goal') {
+          switchMode('death');
+        } else {
+          triggerRoast();
+        }
+      });
+
+      audioBtn.addEventListener('click', function () {
+        state.sound = !state.sound;
+        audioIcon.textContent = state.sound ? '🔊' : '🔇';
+        audioLabel.textContent = state.sound ? 'Sound On' : 'Muted';
+        if (state.sound) { getAudio(); playClick(); }
+      });
+
+      window.addEventListener('click', function () { getAudio(); }, { once: true });
+    })();
+  </script>
+</body>
+</html>
